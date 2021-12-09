@@ -57,6 +57,36 @@ public class BinaryTree {
         return 1 + countNodes3(root.left) + countNodes3(root.right);
     }
 
+    // *****************************  二叉树的最近公共祖先  ******************************
+
+    /**
+     * 二叉树的最近公共祖先
+     * <p>
+     * root节点确定了一棵二叉树，p 和 q 是这这棵二叉树上的两个节点，
+     * 返回 p 节点和 q 节点的最近公共祖先节点
+     */
+    TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+
+        //情况 1，如果p和q都在以root为根的树中，函数返回的即使p和q的最近公共祖先节点。
+        //情况 2，那如果p和q都不在以root为根的树中怎么办呢？函数理所当然地返回null呗。
+        //情况 3，那如果p和q只有一个存在于root为根的树中呢？函数就会返回那个节点。
+
+        // base case
+        if (root == null) return null;
+        if (root == p || root == q) return root;
+
+        TreeNode left = lowestCommonAncestor(root.left, p, q);
+        TreeNode right = lowestCommonAncestor(root.right, p, q);
+
+        // 情况1
+        if (left != null && right != null) return root;
+
+        // 情况2
+        if (left == null && right == null) return null;
+        // 情况3
+        return left == null ? right : left;
+    }
+
 
     /**
      * 基本二叉树节点
