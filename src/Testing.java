@@ -36,6 +36,19 @@ public class Testing {
         return head;
     }
 
+    private void insertSort(int[] array) {
+        for(int i = 1; i < array.length; i++){
+            int temp = array[i];// 记录要插入的数据
+            // 从已经排序的序列最右边的开始比较，找到比其小的数
+            int j = i;
+            while (j > 0 && array[j-1] > temp){
+                array[j] = array[j-1];
+                j--;
+            }
+            if (j != i) array[j] = temp;
+        }
+    }
+
 
     /**
      * 单链表节点
