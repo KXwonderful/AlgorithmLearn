@@ -242,4 +242,37 @@ public class BacktrackTest {
         return sum;
     }
 
+    /**
+     * 和为s的连续正数序列
+     */
+    public int[][] findContinuousSequence(int target) {
+        if (target <= 1) return new int[0][0];
+        backtrackSequence(1, target);
+        int[][] res = resSequence.stream().map(list -> list.stream().mapToInt(i -> i).toArray()).toArray(int[][]::new);
+        return res;
+    }
+
+    List<List<Integer>> resSequence = new ArrayList<>();
+
+    void backtrackSequence(int start, int target) {
+        if (start >= target) return;
+
+        int sum = start;
+        int index = start;
+        while (sum < target) {
+            index++;
+            sum += index;
+        }
+
+        if (sum == target) {
+            List<Integer> list = new ArrayList<>();
+            for (int i = start; i < index; i++) {
+                list.add(i);
+            }
+            resSequence.add(list);
+        }
+
+        backtrackSequence(++start, target);
+    }
+
 }

@@ -1,10 +1,7 @@
 package tree;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 二叉树
@@ -344,11 +341,38 @@ public class BinaryTree {
     }
 
     /**
+     * 111. 二叉树的最小深度
+     */
+    public int minDepth(TreeNode root) {
+        if (root == null) return 0;
+
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        int depth = 1; // 初始化深度1
+
+        while (!q.isEmpty()) {
+            int size = q.size();
+            // 将当前队列中的所有节点向四周扩散
+            for (int i = 0; i < size; i++) {
+                TreeNode cur = q.poll();
+                // 划重点：这里判断是否到达终点
+                if (cur.left == null && cur.right == null) return depth;
+                // 将 cur 的相邻节点加入队列
+                if (cur.left != null) q.offer(cur.left);
+                if (cur.right != null) q.offer(cur.right);
+            }
+
+            depth++;
+        }
+        return depth;
+    }
+
+    /**
      * 112.路径总和：判断该树中是否存在 根节点到叶子节点 的路径，这条路径上所有节点值相加等于目标和 targetSum
      */
     public boolean hasPathSum(TreeNode root, int targetSum) {
         if (root == null) return false;
-        if (root.left == null && root.right == null &&root.val == targetSum) {
+        if (root.left == null && root.right == null && root.val == targetSum) {
             return true;
         }
         return hasPathSum(root.left, targetSum - root.val) || hasPathSum(root.right, root.val);
@@ -378,6 +402,148 @@ public class BinaryTree {
         traverse(root.right, targetSum);
         sum -= root.val;
         track.remove(track.size() - 1);
+    }
+
+    /**
+     * 从上到下打印二叉树1
+     */
+    public int[] levelOrder(TreeNode root) {
+        if (root == null) return new int[0];
+
+        // 队列循环
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        List<Integer> list = new ArrayList<>();
+
+        while (!q.isEmpty()) {
+            TreeNode cur = q.poll();
+            list.add(cur.val);
+
+            if (cur.left != null) q.offer(cur.left);
+            if (cur.right != null) q.offer(cur.right);
+        }
+
+        int size = list.size();
+        int[] res = new int[size];
+        for (int i = 0; i < size; i++) {
+            res[i] = list.get(i);
+        }
+
+        return res;
+    }
+
+    /**
+     * 从上到下打印二叉树2
+     */
+    public List<List<Integer>> levelOrder2(TreeNode root) {
+        if (root == null) return new ArrayList<>();
+
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        List<List<Integer>> res = new ArrayList<>();
+
+        while (!q.isEmpty()) {
+            int size = q.size();
+            List<Integer> list = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode cur = q.poll();
+                list.add(cur.val);
+
+                if (cur.left != null) q.offer(cur.left);
+                if (cur.right != null) q.offer(cur.right);
+            }
+            res.add(list);
+        }
+
+        return res;
+    }
+
+    /**
+     * 从上到下打印二叉树3:
+     * 按照之字形顺序打印二叉树，即第一行按照从左到右的顺序打印，第二层按照从右到左的顺序打印，第三行再按照从左到右的顺序打印，其他行以此类推。
+     */
+    public List<List<Integer>> levelOrder3(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if (root == null) return res;
+
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        int flag = 1;
+
+        while (!q.isEmpty()) {
+            LinkedList<Integer> temp = new LinkedList<>();
+            int size = q.size();
+
+            for (int i = 0; i < size; i++) {
+                TreeNode cur = q.poll();
+                if (flag % 2 == 0) {
+                    temp.addFirst(cur.val);
+                } else {
+                    temp.addLast(cur.val);
+                }
+
+                if (cur.left != null) q.offer(cur.left);
+                if (cur.right != null) q.offer(cur.right);
+            }
+
+            flag++;
+            res.add(temp);
+        }
+
+        return res;
+    }
+
+    /**
+     * 剑指 Offer 55 - II. 平衡二叉树
+     */
+    public boolean isBalanced(TreeNode root) {
+        maxDepth3(root);
+        return isBalanced;
+    }
+
+    boolean isBalanced = true;
+
+    // 输入一个节点，返回以该节点为根的二叉树的最大深度
+    int maxDepth3(TreeNode root) {
+        if (root == null) return 0;
+
+        int leftMaxDepth = maxDepth3(root.left);
+        int rightMaxDepth = maxDepth3(root.right);
+
+        // 后序遍历位置
+        if (Math.abs(rightMaxDepth - leftMaxDepth) > 1) {
+            isBalanced = false;
+        }
+        return 1 + Math.max(leftMaxDepth, rightMaxDepth);
+    }
+
+    /**
+     * 剑指 Offer 68 - I. 二叉搜索树的最近公共祖先
+     */
+    public TreeNode lowestCommonAncestor2(TreeNode root, TreeNode p, TreeNode q) {
+        //1、如果 p 和 q 都比当前节点小，那么显然 p 和 q 都在左子树，那么 LCA 在左子树。
+        //2、如果 p 和 q 都比当前节点大，那么显然 p 和 q 都在右子树，那么 LCA 在右子树。
+        //3、一旦发现 p 和 q 在当前节点的两侧，说明当前节点就是 LCA。
+        if (root == null) return null;
+
+        if (p.val > q.val) {
+            // 保证 p.val <= q.val，便于后续情况讨论
+            return lowestCommonAncestor2(root, q, p);
+        }
+
+        if (root.val >= p.val && root.val <= q.val) {
+            // p <= root <= q
+            // 即 p 和 q 分别在 root 的左右子树，那么 root 就是 LCA
+            return root;
+        }
+
+        if (root.val > q.val) {
+            // p 和 q 都在 root 的左子树，那么 LCA 在左子树
+            return lowestCommonAncestor2(root.left, p, q);
+        } else {
+            // p 和 q 都在 root 的右子树，那么 LCA 在右子树
+            return lowestCommonAncestor2(root.right, p, q);
+        }
     }
 
 
