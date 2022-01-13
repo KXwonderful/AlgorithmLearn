@@ -163,6 +163,48 @@ public class Sort {
         return res;
     }
 
+    private int[] mergeSort2(int[] array) {
+        this.nums = array;
+        temp = new int[nums.length];
+        mergeSort(0, nums.length - 1);
+        return nums;
+    }
+
+    int[] nums, temp;
+
+    private void mergeSort(int l, int r) {
+        // 终止条件
+        if (l >= r) return;
+
+        // 递归归并
+        int m = (l + r) / 2;
+        mergeSort(l, m);
+        mergeSort(m + 1, r);
+
+        // 合并阶段
+        for (int i = l; i <= r; i++) {
+            // 缓存原数组
+            temp[i] = nums[i];
+        }
+
+        int i = l, j = m + 1;
+        for (int k = l; k <= r; k++) {
+            if (i == m + 1) {
+                // 1.左子数组已合并完，因此添加右子数组当前元素 temp[j]，并执行 j=j+1;
+                nums[k] = temp[j++];
+            } else if (j == r + 1) {
+                // 2. 右子数组已合并完，因此添加左子数组当前元素 temp[i]，并执行 i=i+1;
+                nums[k] = temp[i++];
+            } else if (temp[i] <= temp[j]) {
+                // 3. 添加左子数组当前元素 temp[i], 并执行 i=i+1;
+                nums[k] = temp[i++];
+            } else {
+                // 4. 即 temp[j] > temp[i]：添加右子数组当前元素 temp[j], 并执行 j=j+1;
+                nums[k] = temp[j++];
+            }
+        }
+    }
+
 
     /**
      * 快速排序：平均时间复杂度O(nlogn) ，最坏时间复杂度O(n²) ，最好时间复杂度O(nlogn) ，空间O(logn)，不稳定

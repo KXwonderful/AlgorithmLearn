@@ -554,6 +554,496 @@ public class Testing {
         return (int) res;
     }
 
+    /**
+     * 剑指 Offer 19. 正则表达式匹配
+     * <p>
+     * 给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 '.' 和 '*' 的正则表达式匹配。
+     * '.' 匹配任意单个字符
+     * '*' 匹配零个或多个前面的那一个元素
+     */
+    public boolean isMatch(String s, String p) {
+//        // 看两个字符是否匹配，一切逻辑围绕匹配/不匹配两种情况展开即可
+//        int index_s = 0, index_p = 0;
+//        while (index_s < s.length() && index_p < p.length()) {
+//            // 「.」通配符就是万金油
+//            if (s.charAt(index_s) == p.charAt(index_p) || p.charAt(index_p) == '.') {
+//                // 匹配
+//                if (index_p < p.length() - 1 && p.charAt(index_p + 1) == '*') {
+//                    // 有 * 通配符，可以匹配 0 次或多次
+//                } else {
+//                    // 无 * 通配符，老老实实匹配 1 次
+//                    index_s++;
+//                    index_p++;
+//                }
+//            } else {
+//                // 不匹配
+//                if (index_p < p.length() - 1 && p.charAt(index_p + 1) == '*') {
+//                    // 有 * 通配符，只能匹配 0 次
+//                } else {
+//                    // 无 * 通配符，匹配无法进行下去了
+//                    return false;
+//                }
+//            }
+//        }
+//
+//        return index_s == index_p;
+        memoMatch = new HashMap<>();
+        return dp(s, 0, p, 0);
+    }
+
+    HashMap<String, Boolean> memoMatch;
+
+    /**
+     * dp(s,i,p,j) = true：表示 s[i..] 可以匹配 p[j..]
+     * dp(s,i,p,j) = false：则表示 s[i..] 无法匹配 p[j..]
+     */
+    boolean dp(String s, int i, String p, int j) {
+
+        // base case
+        if (j == p.length()) return i == s.length();
+        if (i == s.length()) {
+            // 如果能匹配空串，一定是字符和 * 成对儿出现
+            if ((p.length() - j) % 2 == 1) return false;
+            // 检查是否为 x*y*z* 这种形式
+            for (; j + 1 < p.length(); j += 2) {
+                if (p.charAt(j + 1) != '*') return false;
+            }
+            return true;
+        }
+
+        // 记录状态 (i, j)，消除重叠子问题
+        String key = i + "," + j;
+        if (memoMatch.containsKey(key)) return memoMatch.get(key);
+        boolean res;
+
+        if (s.charAt(i) == p.charAt(j) || p.charAt(j) == '.') {
+            // 匹配
+            if (j < p.length() - 1 && p.charAt(j + 1) == '*') {
+                // 1.1 通配符匹配 0 次 或多次
+                res = dp(s, i, p, j + 2) || dp(s, i + 1, p, j);
+            } else {
+                // 1.2 常规匹配 1 次
+                res = dp(s, i + 1, p, j + 1);
+            }
+        } else {
+            // 不匹配
+            if (j < p.length() - 1 && p.charAt(j + 1) == '*') {
+                // 2.1 通配符匹配 0 次
+                res = dp(s, i, p, j + 2);
+            } else {
+                // 2.2 无法继续匹配
+                res = false;
+            }
+        }
+
+        // 添加备忘录
+        memoMatch.put(key, res);
+        return res;
+    }
+
+    /**
+     * 剑指 Offer 37. 序列化二叉树 -- 前序遍历
+     */
+    public static class Codec {
+
+        String SEP = ",";
+        String NULL = "#";
+
+
+        // Encodes a tree to a single string.
+        public String serialize(TreeNode root) {
+            StringBuilder sb = new StringBuilder();
+            serialize(root, sb);
+            return sb.toString();
+        }
+
+        // 将二叉树打平为字符串 -- 前序遍历
+        void serialize(TreeNode root, StringBuilder sb) {
+            if (root == null) {
+                sb.append(NULL).append(SEP);
+                return;
+            }
+
+            sb.append(root.val).append(SEP);
+
+            serialize(root.left, sb);
+            serialize(root.right, sb);
+        }
+
+        // Decodes your encoded data to tree.
+        public TreeNode deserialize(String data) {
+            LinkedList<String> nodes = new LinkedList<>();
+            for (String s : data.split(SEP)) {
+                nodes.addLast(s);
+            }
+            return deserialize(nodes);
+        }
+
+        // 通过 nodes 列表构造二叉树 -- 前序遍历
+        TreeNode deserialize(LinkedList<String> nodes) {
+            if (nodes.isEmpty()) return null;
+
+            // 前序遍历得到的 nodes 列表中，第一个元素是 root 节点的值
+            String first = nodes.removeFirst();
+            if (first.equals(NULL)) return null;
+            TreeNode root = new TreeNode(Integer.parseInt(first));
+
+            root.left = deserialize(nodes);
+            root.right = deserialize(nodes);
+            return root;
+        }
+    }
+
+    /**
+     * 剑指 Offer 37. 序列化二叉树 -- 后序遍历
+     */
+    public static class Codec2 {
+
+        String SEP = ",";
+        String NULL = "#";
+
+
+        // Encodes a tree to a single string.
+        public String serialize(TreeNode root) {
+            StringBuilder sb = new StringBuilder();
+            serialize(root, sb);
+            return sb.toString();
+        }
+
+        // 将二叉树打平为字符串 -- 后序遍历
+        void serialize(TreeNode root, StringBuilder sb) {
+            if (root == null) {
+                sb.append(NULL).append(SEP);
+                return;
+            }
+            serialize(root.left, sb);
+            serialize(root.right, sb);
+
+            sb.append(root.val).append(SEP);
+        }
+
+        // Decodes your encoded data to tree.
+        public TreeNode deserialize(String data) {
+            LinkedList<String> nodes = new LinkedList<>();
+            for (String s : data.split(SEP)) {
+                nodes.addLast(s);
+            }
+            return deserialize(nodes);
+        }
+
+        // 通过 nodes 列表构造二叉树 -- 后序遍历
+        TreeNode deserialize(LinkedList<String> nodes) {
+            if (nodes.isEmpty()) return null;
+
+            // 后序遍历得到的 nodes 列表中，最后一个元素是 root 节点的值
+            // 从后往前取出元素
+            String last = nodes.removeLast();
+            if (last.equals(NULL)) return null;
+            TreeNode root = new TreeNode(Integer.parseInt(last));
+
+            // 先构造右子树，后构造左子树
+            root.right = deserialize(nodes);
+            root.left = deserialize(nodes);
+            return root;
+        }
+    }
+
+    /**
+     * 剑指 Offer 37. 序列化二叉树 -- 层序遍历
+     */
+    public static class Codec3 {
+
+        String SEP = ",";
+        String NULL = "#";
+
+
+        // Encodes a tree to a single string.
+        public String serialize(TreeNode root) {
+            if (root == null) return "";
+            StringBuilder sb = new StringBuilder();
+
+            // 层序遍历
+            // 初始化队列，将 root 加入队列
+            Queue<TreeNode> q = new LinkedList<>();
+            q.offer(root);
+            while (!q.isEmpty()) {
+                TreeNode cur = q.poll();
+
+                // ---- 层级遍历代码位置 start -----
+                if (cur == null) {
+                    sb.append(NULL).append(SEP);
+                    continue;
+                }
+                sb.append(cur.val).append(SEP);
+                // ---- 层级遍历代码位置 end -----
+
+                q.offer(cur.left);
+                q.offer(cur.right);
+            }
+
+            return sb.toString();
+        }
+
+
+        // Decodes your encoded data to tree.
+        public TreeNode deserialize(String data) {
+            if (data.isEmpty()) return null;
+
+            // 用队列进行层级遍历，同时用索引 i 记录对应子节点的位置
+
+            String[] nodes = data.split(SEP);
+            // 第一个元素就是 root 的值
+            TreeNode root = new TreeNode(Integer.parseInt(nodes[0]));
+
+            // 队列 q 记录父节点，将 root 加入队列
+            Queue<TreeNode> q = new LinkedList<>();
+            q.offer(root);
+
+            for (int i = 1; i < nodes.length; ) {
+                // 队列中存的都是父节点
+                TreeNode parent = q.poll();
+                // 父节点对应的左侧子节点的值
+                String left = nodes[i++];
+                if (!left.equals(NULL)) {
+                    parent.left = new TreeNode(Integer.parseInt(left));
+                    q.offer(parent.left);
+                } else {
+                    parent.left = null;
+                }
+                // 父节点对应的右侧子节点的值
+                String right = nodes[i++];
+                if (!right.equals(NULL)) {
+                    parent.right = new TreeNode(Integer.parseInt(right));
+                    q.offer(parent.right);
+                } else {
+                    parent.right = null;
+                }
+            }
+
+            return root;
+        }
+    }
+
+
+    /**
+     * 剑指 Offer 41. 数据流中的中位数
+     */
+    static class MedianFinder {
+
+        private PriorityQueue<Integer> large; // 梯形 -- 小堆顶（存放较大的数字）
+        private PriorityQueue<Integer> small; // 倒三角形 -- 大堆顶（存放较小的数字）
+
+        /**
+         * initialize your data structure here.
+         */
+        public MedianFinder() {
+            large = new PriorityQueue<>();
+            small = new PriorityQueue<>((a, b) -> b - a);
+        }
+
+        // 不仅要维护large和small的元素个数之差不超过 1，
+        // 还要维护large堆的堆顶元素要大于等于small堆的堆顶元素。
+        public void addNum(int num) {
+            if (small.size() >= large.size()) {
+                // 想要往large里添加元素，不能直接添加，而是要先往small里添加，然后再把small的堆顶元素加到large中；
+                small.offer(num);
+                large.offer(small.poll());
+            } else {
+                // 向small中添加元素同理
+                large.offer(num);
+                small.offer(large.poll());
+            }
+        }
+
+        public double findMedian() {
+            if (large.isEmpty() && small.isEmpty()) return -1;
+            // 如果元素不一样多，多的那个堆的堆顶元素就是中位数
+            if (large.size() < small.size()) {
+                return small.peek();
+            } else if (large.size() > small.size()) {
+                return large.peek();
+            }
+            return (large.peek() + small.peek()) / 2.0;
+        }
+    }
+
+    /**
+     * 剑指 Offer 43. 1～n 整数中 1 出现的次数
+     * <p>
+     * 时间复杂度O(logn) 空间复杂度 O(1)
+     */
+    public int countDigitOne(int n) {
+        // 当前位cur, 低位low, 高位 high, 位因子 记为 digit
+        int digit = 1, res = 0;
+        int high = n / 10, cur = n % 10, low = 0;
+        while (high != 0 || cur != 0) {
+            if (cur == 0) res += high * digit;
+            else if (cur == 1) res += high * digit + low + 1;
+            else res += (high + 1) * digit;
+
+            low += cur * digit;
+            cur = high % 10;
+            high /= 10;
+            digit *= 10;
+        }
+        return res;
+    }
+
+    /**
+     * 求任意数字出现次数：1～n 整数中 k 出现的次数
+     */
+    public int digitCounts(int n, int k) {
+        long digit = 1;
+        int res = 0, high = n / 10, low = 0, cur = n % 10;
+        while (high != 0 || cur != 0) {
+            if (cur < k) res += high * digit;
+            else if (cur == k) res += high * digit + low + 1;
+            else res += (high + k) * digit;
+
+            low += cur * digit;
+            cur = high % 10;
+            high /= 10;
+            digit *= 10;
+        }
+        return res;
+    }
+
+    /**
+     * 剑指 Offer 51. 数组中的逆序对
+     * <p>
+     * 在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。
+     * 输入一个数组，求出这个数组中的逆序对的总数。
+     * <p>
+     * 时间复杂度 O(NlogN) 空间复杂度 O(N)
+     */
+    public int reversePairs(int[] nums) {
+//        int len = nums.length;
+//        int res = 0;
+//        for (int i = 0; i < len - 1; i++) {
+//            for (int j = i + 1; j < len; j++) {
+//                if (nums[i] > nums[j]) {
+//                    res++;
+//                }
+//            }
+//        }
+//        return res;
+
+        this.nums = nums;
+        temp = new int[nums.length];
+        return mergeSort(0, nums.length - 1);
+    }
+
+    int[] nums, temp;
+
+    // 归并排序与逆序对统计
+    private int mergeSort(int l, int r) {
+        // 1. 终止条件
+        if (l >= r) return 0;
+        // 2. 递归划分
+        int m = (l + r) / 2;
+        int res = mergeSort(l, m) + mergeSort(m + 1, r);
+        // 3. 合并阶段
+        int i = l, j = m + 1;
+        for (int k = l; k <= r; k++) {
+            // 3.1 暂存数组 nums 闭区间 [i, r] 内的元素至辅助数组 temp
+            temp[k] = nums[k];
+        }
+        // 3.2 循环合并
+        for (int k = l; k <= r; k++) {
+            if (i == m + 1) {
+                // 3.2.1 左子数组已合并完，因此添加右子数组当前元素 temp[j]，并执行 j=j+1;
+                nums[k] = temp[j++];
+            } else if (j == r + 1) {
+                // 3.2.2 右子数组已合并完，因此添加左子数组当前元素 temp[i]，并执行 i=i+1;
+                nums[k] = temp[i++];
+            } else if (temp[i] <= temp[j]) {
+                // 3.2.3 添加左子数组当前元素 temp[i], 并执行 i=i+1;
+                nums[k] = temp[i++];
+            } else {
+                // 3.2.4 即 temp[j] > temp[i]：添加右子数组当前元素 temp[j], 并执行 j=j+1;
+                // 此时构成 m - i + 1 个「逆序对」，统计添加至 res
+                nums[k] = temp[j++];
+                res += m - i + 1; // 统计逆序对
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 剑指 Offer 64. 求1+2+…+n
+     */
+    public int sumNum(int n) {
+        // if(A && B)  若 A 为 false，则 B 的判断不会执行（即短路），直接判定 A && B 为 false
+        // if(A || B)  若 A 为 true ，则 B 的判断不会执行（即短路），直接判定 A || B 为 true
+
+        // 要实现 “当 n = 1 时终止递归”
+        // n > 1 && sumNums(n - 1) // 当 n = 1 时 n > 1 不成立 ，此时 “短路” ，终止后续递归
+        boolean flag = n > 1 && sumNum(n - 1) > 1;
+        sumNumAns += n;
+        return sumNumAns;
+    }
+
+    int sumNumAns = 0;
+
+    /**
+     * 剑指 Offer 59 - I. 滑动窗口的最大值
+     */
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        MonotonicQueue window = new MonotonicQueue();
+        List<Integer> res = new ArrayList<>();
+
+        for (int i = 0; i < nums.length; i++) {
+            if (i < k - 1) {
+                window.push(nums[i]);
+            } else {
+                window.push(nums[i]);
+                res.add(window.max());
+                window.pop(nums[i - k + 1]);
+            }
+        }
+
+        int len = res.size();
+        int[] ans = new int[len];
+        for (int i = 0; i < len; i++) {
+            ans[i] = res.get(i);
+        }
+        return ans;
+    }
+
+    // 单调队列
+    static class MonotonicQueue {
+
+        LinkedList<Integer> q = new LinkedList<>();
+
+        void push(int num) {
+            while (!q.isEmpty() && q.getLast() < num) {
+                q.pollLast();
+            }
+            q.addLast(num);
+        }
+
+        void pop(int num) {
+            if (num == q.getFirst()) {
+                q.pollFirst();
+            }
+        }
+
+        int max() {
+            return q.getFirst();
+        }
+
+    }
+
+    public static class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+
+        TreeNode(int x) {
+            val = x;
+        }
+    }
+
 
     /**
      * 单链表节点
