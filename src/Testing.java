@@ -3,7 +3,26 @@ import java.util.*;
 public class Testing {
 
     public static void main(String[] args) {
-
+        int[] arr = new int[]{-15, -5, 1, 1, 2, 2, 3, 3, 5, 5, 6, 6, 7, 7, 8, 8, 10, 13};
+        List<List<Integer>> res = findTwoArray(arr, 9);
+        for (List<Integer> list : res) {
+            System.out.println(list);
+        }
+        System.out.println("================");
+        List<List<Integer>> res2 = findThreeArray(arr, 9);
+        for (List<Integer> list : res2) {
+            System.out.println(list);
+        }
+        System.out.println("================");
+        List<List<Integer>> res3 = twoSumTarget(arr, 0, 9);
+        for (List<Integer> list : res3) {
+            System.out.println(list);
+        }
+        System.out.println("================");
+        List<List<Integer>> res4 = threeSumTarget(arr, 9);
+        for (List<Integer> list : res4) {
+            System.out.println(list);
+        }
     }
 
     private ListNode traverse1(ListNode head) {
@@ -1032,6 +1051,326 @@ public class Testing {
             return q.getFirst();
         }
 
+    }
+
+    /**
+     * 4. 寻找两个正序数组的中位数
+     */
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        int m = nums1.length;
+        int n = nums2.length;
+        if (m == 0 && n != 0) return nums2[n / 2];
+        if (m != 0 && n == 0) return nums1[m / 2];
+        return 0;
+    }
+
+    /**
+     * 给定一个有序数组 arr 和 目标值 sum，返回累加和为 sum 的所有不同二元数组
+     * <p>
+     * 有序数组时间复杂度是 O(N)
+     * 无序数组时间复杂度是 O(NlogN)
+     * 其中 while 循环时间复杂度是 O(N)，而排序的时间复杂度是 O(NlogN) -- 针对无序数组要先排序
+     */
+    public static List<List<Integer>> findTwoArray(int[] arr, int sum) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (arr == null || arr.length < 2) return ans;
+
+        // 若无序数组先排序
+        // sort(arr)
+
+        // 用双指针技巧
+        int left = 0, right = arr.length - 1;
+        while (left < right) {
+            int curSum = arr[left] + arr[right];
+            // 记录索引 left 和 right 最初对应的值
+            int leftNum = arr[left], rightNum = arr[right];
+            if (curSum == sum) {
+                // 找到目标和
+                List<Integer> curAns = new ArrayList<>();
+                curAns.add(arr[left]);
+                curAns.add(arr[right]);
+                ans.add(curAns);
+                // 跳过所有重复的元素
+                while (left < right && arr[left] == leftNum) left++;
+                while (left < right && arr[right] == rightNum) right--;
+            } else if (curSum < sum) {
+                //left++;
+                while (left < right && arr[left] == leftNum) left++; // 跳过重复元素
+            } else if (curSum > sum) {
+                //right--;
+                while (left < right && arr[right] == rightNum) right--; // 跳过重复元素
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * 给定一个有序数组 arr 和 目标值 sum，返回累加和为 sum 的所有不同三元数组
+     */
+    public static List<List<Integer>> findThreeArray(int[] arr, int sum) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (arr == null || arr.length < 3) return ans;
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            // 每次把最后一个数提取除来
+            int max = arr[i];
+            int target = sum - max;
+            if (i != arr.length - 1 && arr[i] == arr[i + 1]) continue; // 去重
+            // 在剩下的数组中寻找所有不同的二元数组
+            int[] leftArr = Arrays.copyOfRange(arr, 0, i);
+            List<List<Integer>> twoArray = findTwoArray(leftArr, target);
+            if (twoArray.size() > 0) {
+                for (List<Integer> list : twoArray) {
+                    list.add(max);
+//                        if (!ans.contains(list)){
+//                            ans.add(list);
+//                        }
+                }
+                ans.addAll(twoArray);
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * 给定一个有序数组 arr 和 目标值 sum，返回累加和为 sum 的所有不同三元数组
+     * <p>
+     * 时间复杂度：O(N^2)
+     */
+    public static List<List<Integer>> threeSumTarget(int[] arr, int sum) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (arr == null || arr.length < 3) return ans;
+
+        int n = arr.length;
+        for (int i = 0; i < n; i++) {
+            // 对 sum - arr[i] 计算 twoSum
+            List<List<Integer>> twoArray = twoSumTarget(arr, i + 1, sum - arr[i]);
+            if (twoArray.size() > 0) {
+                for (List<Integer> list : twoArray) {
+                    list.add(arr[i]);
+                }
+                ans.addAll(twoArray);
+            }
+            // 跳过第一个数字重复的情况，否则会出现重复结果
+            while (i < n - 1 && arr[i] == arr[i + 1]) i++;
+        }
+        return ans;
+    }
+
+    /**
+     * 从 arr[start] 开始，计算有序数组 arr 中所有和为 target 的二元组
+     */
+    public static List<List<Integer>> twoSumTarget(int[] arr, int start, int target) {
+        List<List<Integer>> ans = new ArrayList<>();
+        int left = start, right = arr.length - 1;
+        while (left < right) {
+            int curSum = arr[left] + arr[right];
+            // 记录索引 left 和 right 最初对应的值
+            int leftNum = arr[left], rightNum = arr[right];
+            if (curSum == target) {
+                // 找到目标和
+                List<Integer> curAns = new ArrayList<>();
+                curAns.add(arr[left]);
+                curAns.add(arr[right]);
+                ans.add(curAns);
+                // 跳过所有重复的元素
+                while (left < right && arr[left] == leftNum) left++;
+                while (left < right && arr[right] == rightNum) right--;
+            } else if (curSum < target) {
+                //left++;
+                while (left < right && arr[left] == leftNum) left++; // 跳过重复元素
+            } else if (curSum > target) {
+                //right--;
+                while (left < right && arr[right] == rightNum) right--; // 跳过重复元素
+            }
+        }
+
+        return ans;
+    }
+
+    /**
+     * 给定一个有序数组 arr 和 目标值 sum，返回累加和为 sum 的所有不同四元数组
+     * <p>
+     * 时间复杂度：O(N^3)
+     */
+    public static List<List<Integer>> fourSumTarget(int[] arr, int sum) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (arr == null || arr.length < 4) return ans;
+
+        return nSumTarget(arr, 4, 0, sum);
+    }
+
+    /**
+     * 给定一个有序数组 arr 和 目标值 target，返回累加和为 target 的所有不同 n 元数组
+     * <p>
+     * 时间复杂度：O(N^n)
+     */
+    public static List<List<Integer>> nSumTarget(int[] arr, int n, int start, int target) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (arr == null || arr.length < n || n < 2) return ans;
+
+        Arrays.sort(arr);
+
+        int size = arr.length;
+        // base case
+        if (n == 2) {
+            // 双指针操作
+            int left = start, right = size - 1;
+            while (left < right) {
+                int sum = arr[left] + arr[right];
+                int leftNum = arr[left], rightNum = arr[right];
+                if (sum == target) {
+                    List<Integer> list = new ArrayList<>();
+                    list.add(arr[left]);
+                    list.add(arr[right]);
+                    ans.add(list);
+                    // 跳过所有重复的元素
+                    while (left < right && arr[left] == leftNum) left++;
+                    while (left < right && arr[right] == rightNum) right--;
+                } else if (sum < target) {
+                    while (left < right && arr[left] == leftNum) left++;
+                } else if (sum > target) {
+                    while (left < right && arr[right] == rightNum) right--;
+                }
+            }
+        } else {
+            // n > 2 时，递归计算 (n-1)Sum 的结果
+            for (int i = start; i < size; i++) {
+                List<List<Integer>> list = nSumTarget(arr, n - 1, i + 1, target - arr[i]);
+                for (List<Integer> list1 : list) {
+                    // (n-1)Sum 加上 nums[i] 就是 nSum
+                    list1.add(arr[i]);
+                    ans.add(list1);
+                }
+                while (i < size - 1 && arr[i] == arr[i + 1]) i++;
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * 给定一个二维数组 matrix，其中每个数都是正数，从左到右下每一步只能向右或向下，沿途数字累加，返回最小路径和
+     */
+    public static int minSum(int[][] matrix) {
+        if (matrix == null || matrix.length == 0) return 0;
+
+        return process(matrix, matrix.length - 1, matrix[0].length - 1);
+    }
+
+    static HashMap<String, Integer> minMemo = new HashMap<>();
+
+    // 定义： [0,0] 到 [i,j] 的最小路径和
+    public static int process(int[][] matrix, int i, int j) {
+
+        if (i < 0 || j < 0) return Integer.MAX_VALUE;
+
+        if (i == 0 && j == 0) return matrix[0][0];
+
+        String key = i + "," + j;
+        if (minMemo.containsKey(key)) return minMemo.get(key);
+
+        minMemo.put(key, matrix[i][j] + Math.min(process(matrix, i - 1, j), process(matrix, i, j - 1)));
+
+        return minMemo.get(key);
+    }
+
+
+    /**
+     * 给你一根长度为 n 的绳子，请把绳子剪成整数长度的 m 段（m、n都是整数，n>1并且m>1），
+     * 每段绳子的长度记为 k[0],k[1]...k[m-1] 。请问 k[0]*k[1]*...*k[m-1] 可能的最大乘积是多少？
+     * 例如，当绳子的长度是8时，我们把它剪成长度分别为2、3、3的三段，此时得到的最大乘积是18。
+     * <p>
+     * 输入: 2
+     * 输出: 1
+     * 解释: 2 = 1 + 1, 1 × 1 = 1
+     * <p>
+     * 输入: 10
+     * 输出: 36
+     * 解释: 10 = 3 + 3 + 4, 3 × 3 × 4 = 36
+     */
+    public int cuttingRope(int n) {
+        if (n == 2) return 1;
+        if (n == 3) return 2;
+        if (n == 4) return 4;
+
+        int len = n;
+        int res = 1;
+        // 3是最小切分段的乘积最大
+        while (len > 4) {
+            res *= 3;
+            len -= 3;
+        }
+        return res * len;
+    }
+
+    public int cuttingRope2(int n) {
+        // dp 数组：dp[i]表示长度为i的绳子剪成m端后长度的最大乘积(m>1)
+        int[] dp = new int[n + 1];
+
+        dp[2] = 1;
+        for (int i = 3; i <= n; i++) {
+            // 首先对绳子剪长度为j的一段,其中取值范围为 2 <= j < i
+            for (int j = 2; j < i; j++) {
+                // Math.max(j*(i-j),j*dp[i-j]是由于减去第一段长度为j的绳子后，可以继续剪也可以不剪
+                dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
+            }
+        }
+
+        return dp[n];
+    }
+
+    /**
+     * 去除重复字母
+     * <p>
+     * 给一个仅包含小写字母的字符串，去除重复字母，使得每个字母只出现移除。需保证返回结果的字典序最小
+     * 要求不能打乱其他字符的相对位置
+     * <p>
+     * 如："bcabc" --> "abc", "cbacdcbc" --> "acdb"
+     * <p>
+     * 要求一、要去重。
+     * <p>
+     * 要求二、去重字符串中的字符顺序不能打乱s中字符出现的相对顺序。
+     * <p>
+     * 要求三、在所有符合上一条要求的去重字符串中，字典序最小的作为最终结果。
+     */
+    private String removeDuplicateLetters(String s) {
+        // 存放去重结果
+        Stack<Character> stk = new Stack<>();
+
+        // 计数器用于记录字符串中字符的数量
+        int[] count = new int[256];
+        for (int i = 0; i < s.length(); i++) {
+            count[s.charAt(i)]++;
+        }
+
+        // 记录栈中是否存在某个字符
+        boolean[] inStack = new boolean[256];
+
+        for (char c : s.toCharArray()) {
+            // 每遍历过一个字符，都将对应的计数减一
+            count[c]--;
+
+            if (inStack[c]) continue;
+
+            // 插入之前，和之前的元素比较一下大小，如果字典序比前面的小，pop 前面的元素
+            while (!stk.isEmpty() && stk.peek() > c) {
+                if (count[stk.peek()] == 0) {
+                    // 若之后不存在栈顶元素了，则停止 pop
+                    break;
+                }
+                inStack[stk.pop()] = false;// 弹出栈顶元素，并把该元素标记为不在栈中
+            }
+
+            stk.push(c);
+            inStack[c] = true;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (!stk.isEmpty()) {
+            sb.append(stk.pop());
+        }
+
+        return sb.reverse().toString();
     }
 
     public static class TreeNode {
